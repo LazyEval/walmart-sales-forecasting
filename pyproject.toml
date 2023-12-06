@@ -4,7 +4,10 @@ version = "0.1.0"
 description = ""
 authors = ["Matteo Latinov <matteo_latinov@yanmar.com>"]
 readme = "README.md"
-packages = [{include = "walmart_model", from = "src"}]
+packages = [
+    {include = "walmart_model", from = "src"},
+    {include = "config"}
+]
 
 [tool.poetry.dependencies]
 python = "^3.11"
