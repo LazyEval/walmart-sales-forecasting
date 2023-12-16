@@ -1,11 +1,12 @@
 from datetime import date
+from typing import Union
 
 from pydantic import BaseModel
 
 
 class SalesRecord(BaseModel):
     date: date
-    sales: int
+    sales: Union[int, float]
 
 
 class Item(BaseModel):
