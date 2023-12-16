@@ -1,21 +1,21 @@
 import polars as pl
 
 from config import config
-from walmart_model.data_models.sales_record import SalesRecord
 
 
-class SalesRecordLoader:
-    def __init__(self, file_name):
+class TransactionProcessor:
+    def __init__(self, file_name, splitter):
         self.file_path = config.RAW_DATA_DIR / file_name
+        self.splitter = splitter
 
-    def get_sales_records(self):
+    def save_items(self):
         transactions = (
             pl.read_csv(self.file_path, try_parse_dates=True)
             .with_columns(pl.col("date").dt.date())
-            .group_by("date", "id", "item_id", "dept_id", "cat_id", "store_id", "state_id")
+            .group_by("date", "id")
             .agg(pl.col("id").count().alias("sales"))
         )
-        sales_records = (
+        items = (
             pl.DataFrame(
                 {
                     "date": pl.date_range(
@@ -28,11 +28,14 @@ class SalesRecordLoader:
             )
             .join(transactions.select(pl.col("id").unique()), how="cross")
             .join(transactions, on=["date", "id"], how="outer")
-            .with_columns(
-                pl.col("^[a-z]+_id$").drop_nulls().first().over("id"),
-                pl.col("sales").fill_null(0),
-            )
+            .with_columns(pl.col("sales").fill_null(0))
+            .filter(pl.col("sales").cumsum().over("id") > 0)  # Drop records until first sales
             .sort(["date", "id"])
         )
-        for row in sales_records.iter_rows(named=True):
-            yield SalesRecord(**row)
+        train_items, valid_items = self.splitter.split_items(items)
+        train_items.group_by("id").agg(pl.col("date"), pl.col("sales")).write_ndjson(
+            config.PROCESSED_DATA_DIR / "train_items.json"
+        )
+        valid_items.group_by("id").agg(pl.col("date"), pl.col("sales")).write_ndjson(
+            config.PROCESSED_DATA_DIR / "valid_items.json"
+        )
