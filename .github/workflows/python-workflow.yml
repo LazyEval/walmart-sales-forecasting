@@ -39,7 +39,9 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - run: poetry run ruff check . --fix
+      - run: |
+          python -m pip install poetry
+          poetry run ruff check . --fix
   test:
     name: Run pytest
     needs: build
@@ -50,4 +52,6 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - run: poetry run pytest
+      - run: |
+          python -m pip install poetry
+          poetry run pytest
