@@ -9,10 +9,6 @@ class ItemSplitter:
         train_items = []
         valid_items = []
         for item in items:
-            train_items.append(
-                Item(id=item.id, item_history=item.item_history[: -self.forecast_horizon])
-            )
-            valid_items.append(
-                Item(id=item.id, item_history=item.item_history[-self.forecast_horizon :])
-            )
+            train_items.append(Item(id=item.id, records=item.records[: -self.forecast_horizon]))
+            valid_items.append(Item(id=item.id, records=item.records[-self.forecast_horizon :]))
         return train_items, valid_items

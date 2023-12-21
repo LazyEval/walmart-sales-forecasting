@@ -10,7 +10,7 @@ class WalmartModel:
         self.forecast_horizon = forecast_horizon
 
     def train(self, items):
-        targets = [i.sales for j in items for i in j.item_history]
+        targets = [r.sales for i in items for r in i.records]
         inputs = self.preprocessor.preprocess_inputs(items=items, train=True)
         self.predictor.fit(inputs, targets)
 
@@ -24,7 +24,7 @@ class WalmartModel:
                     forecasts=[
                         Forecast(date=j.date + timedelta(self.forecast_horizon), sales=k)
                         for j, k in zip(
-                            item.item_history,
+                            item.records,
                             self.predictor.predict(inputs)[
                                 i * self.forecast_horizon : (i + 1) * self.forecast_horizon
                             ],

@@ -13,4 +13,4 @@ class Record(BaseModel):
 
 class Item(BaseModel):
     id: str
-    item_history: list[Record]
+    records: list[Record]

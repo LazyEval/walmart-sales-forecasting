@@ -49,7 +49,7 @@ class ItemLoader:
 
     def get_items(self):
         return [
-            Item(id=k, item_history=[Record(**i) for i in v])
+            Item(id=k, records=[Record(**i) for i in v])
             for k, v in self.get_items_frame()
             .collect()
             .rows_by_key(key=["id"], named=True)

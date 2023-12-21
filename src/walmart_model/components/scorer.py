@@ -10,7 +10,7 @@ class Scorer:
         scale_per_item = {}
         for item in train_items:
             scale_per_item[item.id] = mean(
-                [(i - j) ** 2 for i, j in itertools.pairwise([i.sales for i in item.item_history])]
+                [(i - j) ** 2 for i, j in itertools.pairwise([i.sales for i in item.records])]
             )
         mse_per_item = {}
         for item, prediction in zip(valid_items, predictions):
@@ -18,7 +18,7 @@ class Scorer:
                 [
                     (i - j) ** 2
                     for i, j in zip(
-                        [i.sales for i in item.item_history],
+                        [i.sales for i in item.records],
                         [i.sales for i in prediction.forecasts],
                     )
                 ]
