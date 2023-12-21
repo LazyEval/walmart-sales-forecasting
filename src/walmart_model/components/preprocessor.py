@@ -12,7 +12,7 @@ class Preprocessor:
         self.encoder = encoder
 
     def preprocess_inputs(self, items, train):
-        n_samples = len([i.sales for j in items for i in j.records])
+        n_samples = len([r.sales for i in items for r in i.records])
         cat_features = np.empty((n_samples, N_CAT_FEATURES), dtype=str)
         num_features = np.empty((n_samples, N_NUM_FEATURES))
         i = 0
