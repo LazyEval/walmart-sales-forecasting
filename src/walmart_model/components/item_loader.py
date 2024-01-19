@@ -2,8 +2,6 @@ import polars as pl
 
 from walmart_model.data_models.item import Item, Record
 
-LAGS = [1, 7]
-
 
 class ItemLoader:
     def __init__(self, item_reader, price_reader, calendar_reader, forecast_horizon):
@@ -12,13 +10,42 @@ class ItemLoader:
         self.calendar_reader = calendar_reader
         self.forecast_horizon = forecast_horizon
 
-    def add_lag_features(self, frame, col_name):
+    def add_lag_sales_features(self, frame, lags):
         return frame.with_columns(
-            pl.col(col_name)
-            .shift(self.forecast_horizon + lag)
+            pl.col("sales").shift(self.forecast_horizon + lag).over("id").alias(f"sales_lag_{lag}")
+            for lag in lags
+        )
+
+    def add_rolling_sales_features(self, frame, window_size):
+        return frame.with_columns(
+            pl.col("sales")
+            .shift(self.forecast_horizon)
+            .rolling_mean(window_size=f"{window_size}i", min_periods=1, closed="right")
             .over("id")
-            .alias(f"{col_name}_lag_{lag}")
-            for lag in LAGS
+            .alias(f"sales_rolling_mean_{window_size}"),
+            pl.col("sales")
+            .shift(self.forecast_horizon)
+            .rolling_std(window_size=f"{window_size}i", min_periods=1, closed="right")
+            .over("id")
+            .alias(f"sales_rolling_std_{window_size}"),
+        )
+
+    def add_seasonal_rolling_sales_features(self, frame, window_size):
+        return (
+            frame.with_columns(pl.col("date").dt.weekday().alias("weekday"))
+            .with_columns(
+                pl.col("sales")
+                .shift(self.forecast_horizon)
+                .rolling_mean(window_size=f"{window_size}i", min_periods=1, closed="right")
+                .over("id", "weekday")
+                .alias(f"sales_seasonal_rolling_mean_{window_size}"),
+                pl.col("sales")
+                .shift(self.forecast_horizon)
+                .rolling_std(window_size=f"{window_size}i", min_periods=1, closed="right")
+                .over("id", "weekday")
+                .alias(f"sales_seasonal_rolling_std_{window_size}"),
+            )
+            .drop("weekday")
         )
 
     def get_items(self):
@@ -32,7 +59,12 @@ class ItemLoader:
                 .collect(),
                 on="date",
             )
-            .pipe(self.add_lag_features, col_name="sales")
+            .sort(["id", "date"])
+            .pipe(self.add_lag_sales_features, lags=[1, 7, 28])
+            .pipe(self.add_rolling_sales_features, window_size=7)
+            .pipe(self.add_rolling_sales_features, window_size=28)
+            .pipe(self.add_seasonal_rolling_sales_features, window_size=4)
+            .pipe(self.add_seasonal_rolling_sales_features, window_size=8)
             .rows_by_key(key=["id"], named=True)
             .items()
         ]
