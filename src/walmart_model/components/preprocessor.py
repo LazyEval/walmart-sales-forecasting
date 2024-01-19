@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.preprocessing import OrdinalEncoder
 
 N_CAT_FEATURES = 7
-N_NUM_FEATURES = 3
+N_NUM_FEATURES = 7
 
 
 class Preprocessor:
@@ -28,9 +28,13 @@ class Preprocessor:
                 cat_features[i, 5] = item_tokens[3]
                 cat_features[i, 5] = record.holiday
                 # sell_price, lag features
-                num_features[i, 0] = record.sell_price
-                num_features[i, 1] = record.sales_lag_1
-                num_features[i, 2] = record.sales_lag_7
+                num_features[i, 0] = record.date.weekday()
+                num_features[i, 1] = record.date.day
+                num_features[i, 2] = record.date.month
+                num_features[i, 3] = record.date.year
+                num_features[i, 4] = record.sell_price
+                num_features[i, 5] = record.sales_lag_1
+                num_features[i, 6] = record.sales_lag_7
                 i += 1
         if train:
             return np.hstack([self.encoder.fit_transform(cat_features), num_features])
