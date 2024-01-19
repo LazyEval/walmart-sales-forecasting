@@ -5,13 +5,17 @@ import typer
 
 from config import logger
 from walmart_model.components.item_loader import ItemLoader
+from walmart_model.components.item_reader import ItemReader
 from walmart_model.components.item_splitter import ItemSplitter
+from walmart_model.components.parquet_reader import ParquetReader
 from walmart_model.components.preprocessor import Preprocessor
 from walmart_model.components.scorer import Scorer
 from walmart_model.components.training_pipeline import TrainingPipeline
 from walmart_model.components.walmart_model import WalmartModel
 
 TRANSACTIONS_FILE_NAME = "transactions_data_sampled.csv"
+PRICES_FILE_NAME = "prices.parquet"
+CALENDAR_FILE_NAME = "calendar.parquet"
 FORECAST_HORIZON = 28
 PARAMS = {
     "verbose": -1,
@@ -27,7 +31,9 @@ def main():
 
     pipeline = TrainingPipeline(
         item_loader=ItemLoader(
-            file_name=TRANSACTIONS_FILE_NAME,
+            item_reader=ItemReader(file_name=TRANSACTIONS_FILE_NAME),
+            price_reader=ParquetReader(file_name=PRICES_FILE_NAME),
+            calendar_reader=ParquetReader(file_name=CALENDAR_FILE_NAME),
             forecast_horizon=FORECAST_HORIZON,
         ),
         item_splitter=ItemSplitter(forecast_horizon=FORECAST_HORIZON),

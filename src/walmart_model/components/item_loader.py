@@ -1,14 +1,15 @@
 import polars as pl
 
-from config import config
 from walmart_model.data_models.item import Item, Record
 
 LAGS = [1, 7]
 
 
 class ItemLoader:
-    def __init__(self, file_name, forecast_horizon):
-        self.file_path = config.RAW_DATA_DIR / file_name
+    def __init__(self, item_reader, price_reader, calendar_reader, forecast_horizon):
+        self.item_reader = item_reader
+        self.price_reader = price_reader
+        self.calendar_reader = calendar_reader
         self.forecast_horizon = forecast_horizon
 
     def add_lag_features(self, frame, col_name):
@@ -20,38 +21,18 @@ class ItemLoader:
             for lag in LAGS
         )
 
-    def get_items_frame(self):
-        item_sales = (
-            pl.read_csv(self.file_path, try_parse_dates=True)
-            .with_columns(pl.col("date").dt.date())
-            .group_by("date", "id")
-            .agg(pl.col("id").count().alias("sales"))
-        )
-        return (
-            pl.DataFrame(
-                {
-                    "date": pl.date_range(
-                        item_sales.select(pl.col("date")).min().item(),
-                        item_sales.select(pl.col("date")).max().item(),
-                        "1d",
-                        eager=True,
-                    )
-                }
-            )
-            .join(item_sales.select(pl.col("id").unique()), how="cross")
-            .join(item_sales, on=["date", "id"], how="outer")
-            .with_columns(pl.col("sales").fill_null(0))
-            .filter(pl.col("sales").cumsum().over("id") > 0)  # Drop records until first sales
-            .sort(["date", "id"])
-            .pipe(self.add_lag_features, col_name="sales")
-            .lazy()
-        )
-
     def get_items(self):
         return [
             Item(id=k, records=[Record(**i) for i in v])
-            for k, v in self.get_items_frame()
-            .collect()
+            for k, v in self.item_reader.get_raw_items()
+            .join(self.price_reader.get_data().collect(), on=["date", "item_id", "store_id"])
+            .join(
+                self.calendar_reader.get_data()
+                .select(pl.col("date"), pl.col("snap_TX").alias("holiday"))
+                .collect(),
+                on="date",
+            )
+            .pipe(self.add_lag_features, col_name="sales")
             .rows_by_key(key=["id"], named=True)
             .items()
         ]

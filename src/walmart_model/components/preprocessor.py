@@ -1,8 +1,8 @@
 import numpy as np
 from sklearn.preprocessing import OrdinalEncoder
 
-N_CAT_FEATURES = 5
-N_NUM_FEATURES = 2
+N_CAT_FEATURES = 7
+N_NUM_FEATURES = 3
 
 
 class Preprocessor:
@@ -19,13 +19,18 @@ class Preprocessor:
         for item in items:
             item_tokens = item.id.split("_")
             for record in item.records:
-                cat_features[i, 0] = item_tokens[0] + "_" + item_tokens[1] + "_" + item_tokens[2]
-                cat_features[i, 1] = item_tokens[0] + "_" + item_tokens[1]
-                cat_features[i, 2] = item_tokens[0]
-                cat_features[i, 3] = item_tokens[3] + "_" + item_tokens[4]
-                cat_features[i, 4] = item_tokens[3]
-                num_features[i, 0] = record.sales_lag_1
-                num_features[i, 1] = record.sales_lag_7
+                # id, item_id, dept_id, cat_id, store_id, state_id, holiday
+                cat_features[i, 0] = item.id
+                cat_features[i, 1] = item_tokens[0] + "_" + item_tokens[1] + "_" + item_tokens[2]
+                cat_features[i, 2] = item_tokens[0] + "_" + item_tokens[1]
+                cat_features[i, 3] = item_tokens[0]
+                cat_features[i, 4] = item_tokens[3] + "_" + item_tokens[4]
+                cat_features[i, 5] = item_tokens[3]
+                cat_features[i, 5] = record.holiday
+                # sell_price, lag features
+                num_features[i, 0] = record.sell_price
+                num_features[i, 1] = record.sales_lag_1
+                num_features[i, 2] = record.sales_lag_7
                 i += 1
         if train:
             return np.hstack([self.encoder.fit_transform(cat_features), num_features])
