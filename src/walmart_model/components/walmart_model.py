@@ -9,11 +9,6 @@ class WalmartModel:
         self.predictor = predictor
         self.forecast_horizon = forecast_horizon
 
-    def train(self, items):
-        targets = [r.sales for i in items for r in i.records]
-        inputs = self.preprocessor.preprocess_inputs(items=items, train=True)
-        self.predictor.fit(inputs, targets)
-
     def predict(self, items):
         inputs = self.preprocessor.preprocess_inputs(items=items, train=False)
         predictions = []
