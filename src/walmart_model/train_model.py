@@ -3,6 +3,7 @@ import time
 import typer
 
 from config import logger
+from walmart_model.components.item_feature_service import ItemFeatureService
 from walmart_model.components.item_loader import ItemLoader
 from walmart_model.components.item_reader import ItemReader
 from walmart_model.components.item_splitter import ItemSplitter
@@ -39,6 +40,15 @@ def main():
             item_reader=ItemReader(file_name=TRANSACTIONS_FILE_NAME),
             price_reader=ParquetReader(file_name=PRICES_FILE_NAME),
             calendar_reader=ParquetReader(file_name=CALENDAR_FILE_NAME),
+            item_feature_service=ItemFeatureService(
+                lags=[1, 7, 28],
+                rolling_params=[
+                    {"window_size": 7, "seasonal": False},
+                    {"window_size": 28, "seasonal": False},
+                    {"window_size": 4, "seasonal": True},
+                    {"window_size": 8, "seasonal": True},
+                ],
+            ),
             forecast_horizons=FORECAST_HORIZONS,
         ),
         item_splitter=ItemSplitter(max_forecast_horizon=FORECAST_HORIZONS[-1]),
