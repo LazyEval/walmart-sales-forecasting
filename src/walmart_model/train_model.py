@@ -1,5 +1,7 @@
 import time
 
+import typer
+
 from config import logger
 from walmart_model.components.item_loader import ItemLoader
 from walmart_model.components.item_reader import ItemReader
@@ -13,7 +15,7 @@ from walmart_model.components.training_pipeline import TrainingPipeline
 TRANSACTIONS_FILE_NAME = "transactions_data_sampled.csv"
 PRICES_FILE_NAME = "prices.parquet"
 CALENDAR_FILE_NAME = "calendar.parquet"
-FORECAST_HORIZON = 28
+FORECAST_HORIZONS = [7, 14, 21, 28]
 MODEL_PARAMS = {
     "objective": "tweedie",
     "metric": "None",
@@ -37,9 +39,9 @@ def main():
             item_reader=ItemReader(file_name=TRANSACTIONS_FILE_NAME),
             price_reader=ParquetReader(file_name=PRICES_FILE_NAME),
             calendar_reader=ParquetReader(file_name=CALENDAR_FILE_NAME),
-            forecast_horizon=FORECAST_HORIZON,
+            forecast_horizons=FORECAST_HORIZONS,
         ),
-        item_splitter=ItemSplitter(forecast_horizon=FORECAST_HORIZON),
+        item_splitter=ItemSplitter(max_forecast_horizon=FORECAST_HORIZONS[-1]),
         model_trainer=LightGBMTrainer(
             preprocessor=Preprocessor(),
             model_params=MODEL_PARAMS,
@@ -47,7 +49,6 @@ def main():
             stopping_rounds=STOPPING_ROUNDS,
             log_period=LOG_PERIOD,
         ),
-        forecast_horizon=FORECAST_HORIZON,
         scorer=Scorer(),
     )
     pipeline.run()
@@ -57,5 +58,4 @@ def main():
 
 
 if __name__ == "__main__":
-    # typer.run(main)
-    main()
+    typer.run(main)
