@@ -16,7 +16,7 @@ class TrainingPipeline:
             train_items, valid_items_batch = self.item_splitter.split_items(
                 items, forecast_horizon
             )
-            model = self.model_trainer.get_model(train_items, valid_items_batch)
+            model = self.model_trainer.get_model(train_items, valid_items_batch, forecast_horizon)
             valid_items += valid_items_batch
             predictions += model.predict(valid_items_batch)
         rmsse = self.scorer.get_rmsse(train_items, valid_items, predictions)

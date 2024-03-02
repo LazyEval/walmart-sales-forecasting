@@ -4,9 +4,10 @@ from walmart_model.data_models.prediction import Forecast, Prediction
 
 
 class WalmartModel:
-    def __init__(self, preprocessor, predictor):
+    def __init__(self, preprocessor, predictor, forecast_horizon):
         self.preprocessor = preprocessor
         self.predictor = predictor
+        self.forecast_horizon = forecast_horizon
 
     def predict(self, items):
         inputs = self.preprocessor.preprocess_inputs(items=items, train=False)
@@ -17,8 +18,8 @@ class WalmartModel:
                 Prediction(
                     item_id=item.id,
                     forecasts=[
-                        Forecast(date=record.date + timedelta(forecast_period), sales=prediction)
-                        for record, prediction in zip(
+                        Forecast(date=record.date + timedelta(self.forecast_horizon), sales=output)
+                        for record, output in zip(
                             item.records,
                             self.predictor.predict(inputs)[
                                 i * forecast_period : (i + 1) * forecast_period

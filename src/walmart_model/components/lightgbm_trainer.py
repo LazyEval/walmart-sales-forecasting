@@ -36,7 +36,7 @@ class LightGBMTrainer:
         rmsse = np.mean(((predictions - samples.get_label()) ** 2 / samples.get_weight()) ** 0.5)
         return "RMSSE", rmsse, False
 
-    def get_model(self, train_items, valid_items):
+    def get_model(self, train_items, valid_items, forecast_horizon):
         train_set = lgb.Dataset(
             self.preprocessor.preprocess_inputs(items=train_items, train=True),
             [r.sales for i in train_items for r in i.records],
@@ -57,4 +57,8 @@ class LightGBMTrainer:
             ],
             feval=self.rmsse,
         )
-        return WalmartModel(preprocessor=self.preprocessor, predictor=model)
+        return WalmartModel(
+            preprocessor=self.preprocessor,
+            predictor=model,
+            forecast_horizon=forecast_horizon,
+        )
