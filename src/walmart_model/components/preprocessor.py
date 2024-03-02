@@ -33,7 +33,7 @@ class Preprocessor:
                 cat_features[i, 3] = item_tokens[0]
                 cat_features[i, 4] = item_tokens[3] + "_" + item_tokens[4]
                 cat_features[i, 5] = item_tokens[3]
-                cat_features[i, 5] = record.holiday
+                cat_features[i, 6] = record.holiday
                 # date components, sell_price, lag features, rolling features, price features
                 num_features[i, 0] = record.date.weekday()
                 num_features[i, 1] = record.date.day
