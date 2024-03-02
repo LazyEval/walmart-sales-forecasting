@@ -71,10 +71,11 @@ class ItemLoader:
         )
 
     def get_items_per_forecast_horizon(self):
+        sorted_items = self.get_sorted_items()
         return {
             forecast_horizon: [
                 Item(id=k, records=[Record(**i) for i in v])
-                for k, v in self.add_features(self.get_sorted_items(), forecast_horizon)
+                for k, v in self.add_features(sorted_items, forecast_horizon)
                 .rows_by_key(key=["id"], named=True)
                 .items()
             ]
