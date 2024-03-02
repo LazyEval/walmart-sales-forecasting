@@ -35,6 +35,7 @@ LOG_PERIOD = 50
 def main():
     start = time.time()
 
+    scorer = Scorer()
     pipeline = TrainingPipeline(
         item_loader=ItemLoader(
             item_reader=ItemReader(file_name=TRANSACTIONS_FILE_NAME),
@@ -54,12 +55,13 @@ def main():
         item_splitter=ItemSplitter(max_forecast_horizon=FORECAST_HORIZONS[-1]),
         model_trainer=LightGBMTrainer(
             preprocessor=Preprocessor(),
+            scorer=scorer,
             model_params=MODEL_PARAMS,
             num_boost_rounds=NUM_BOOST_ROUNDS,
             stopping_rounds=STOPPING_ROUNDS,
             log_period=LOG_PERIOD,
         ),
-        scorer=Scorer(),
+        scorer=scorer,
     )
     pipeline.run()
 
