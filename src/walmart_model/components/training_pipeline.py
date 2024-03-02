@@ -13,11 +13,9 @@ class TrainingPipeline:
         valid_items = []
         predictions = []
         for forecast_horizon, items in items_per_forecast_horizon.items():
-            train_items, valid_items_batch = self.item_splitter.split_items(
-                items, forecast_horizon
-            )
-            model = self.model_trainer.get_model(train_items, valid_items_batch, forecast_horizon)
-            valid_items += valid_items_batch
-            predictions += model.predict(valid_items_batch)
+            train_items, valid_fold_items = self.item_splitter.split_items(items, forecast_horizon)
+            model = self.model_trainer.get_model(train_items, valid_fold_items, forecast_horizon)
+            valid_items += valid_fold_items
+            predictions += model.predict(valid_fold_items)
         rmsse = self.scorer.get_rmsse(train_items, valid_items, predictions)
         logger.logger.info(f"Validation RMSSE: {rmsse:.3f}\n{len(train_items)} items")
