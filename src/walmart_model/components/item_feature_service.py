@@ -8,7 +8,10 @@ class ItemFeatureService:
 
     def add_lag_sales_features(self, frame, forecast_horizon, lags):
         return frame.with_columns(
-            pl.col("sales").shift(forecast_horizon + lag).over("id").alias(f"sales_lag_{lag}")
+            pl.col("sales")
+            .shift(forecast_horizon + lag, fill_value=float("nan"))
+            .over("id")
+            .alias(f"sales_lag_{lag}")
             for lag in lags
         )
 
@@ -21,12 +24,12 @@ class ItemFeatureService:
 
         return frame.with_columns(
             pl.col("sales")
-            .shift(forecast_horizon)
+            .shift(forecast_horizon, fill_value=float("nan"))
             .rolling_mean(window_size=f"{window_size}i", min_periods=1, closed="right")
             .over(window_cols)
             .alias(f"sales_{seasonal_prefix}rolling_mean_{window_size}"),
             pl.col("sales")
-            .shift(forecast_horizon)
+            .shift(forecast_horizon, fill_value=float("nan"))
             .rolling_std(window_size=f"{window_size}i", min_periods=1, closed="right")
             .over(window_cols)
             .alias(f"sales_{seasonal_prefix}rolling_std_{window_size}"),
