@@ -8,8 +8,9 @@ class WalmartModel:
         self.preprocessor = preprocessor
         self.predictor = predictor
 
-    def predict(self, items, forecast_period):
+    def predict(self, items):
         inputs = self.preprocessor.preprocess_inputs(items=items, train=False)
+        forecast_period = len(items[0].records)
         predictions = []
         for i, item in enumerate(items):
             predictions.append(

@@ -10,7 +10,6 @@ class TrainingPipeline:
 
     def run(self):
         items_per_forecast_horizon = self.item_loader.get_items_per_forecast_horizon()
-        forecast_period = int(max(items_per_forecast_horizon) / len(items_per_forecast_horizon))
         valid_items = []
         predictions = []
         for forecast_horizon, items in items_per_forecast_horizon.items():
@@ -19,6 +18,6 @@ class TrainingPipeline:
             )
             model = self.model_trainer.get_model(train_items, valid_items_batch)
             valid_items += valid_items_batch
-            predictions += model.predict(valid_items_batch, forecast_period)
+            predictions += model.predict(valid_items_batch)
         rmsse = self.scorer.get_rmsse(train_items, valid_items, predictions)
         logger.logger.info(f"Validation RMSSE: {rmsse:.3f}\n{len(train_items)} items")
