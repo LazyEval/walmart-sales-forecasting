@@ -30,8 +30,10 @@ class ItemLoader:
         items = self.get_items()
         return {
             forecast_horizon: [
-                Item(id=k, records=[Record(**i) for i in v])
-                for k, v in self.item_feature_service.add_features(items, forecast_horizon)
+                Item(id=item_id, records=[Record(**record) for record in records])
+                for item_id, records in self.item_feature_service.add_features(
+                    items, forecast_horizon
+                )
                 .rows_by_key(key=["id"], named=True)
                 .items()
             ]
